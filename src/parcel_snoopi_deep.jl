@@ -1440,7 +1440,13 @@ function suggest(itrig::InferenceTrigger)
                 # It's not clear that the following is useful
                 tt = Base.unwrap_unionall(itrig.callerframes[end].linfo.specTypes)::DataType
                 cts = Base.code_typed_by_type(tt; debuginfo=:source)
-                if length(cts) == 1 && (cts[1][1]::CodeInfo).inlineable
+                ci = cts[1][1]::CodeInfo
+                @static if isdefined(Core.Compiler, :inlineable)
+                    ci_inlineable = Core.Compiler.inlineable(ci)
+                else
+                    ci_inlineable = ci.inlineable
+                end
+                if length(cts) == 1 && ci_inlineable
                     push!(s.categories, CallerInlineable)
                 end
             end
